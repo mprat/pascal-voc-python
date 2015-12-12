@@ -364,11 +364,24 @@ def load_data_multilabel(data_type=None):
     if data_type is None:
         raise ValueError('Must provide data_type = train or val')
     filename = os.path.join(set_dir, data_type + ".txt")
+    cat_list = list_image_sets()
     df = pd.read_csv(
         filename,
         delim_whitespace=True,
         header=None,
         names=['filename'])
-    for img in df:
-        annotation = load_annotation(img['filename'])
-    
+    # add all the blank rows for the multilabel case
+    for cat_name in cat_list:
+        df[cat_name] = 0
+    for info in df.itertuples():
+        index = info[0]
+        fname = info[1]
+        anno = load_annotation(fname)
+        objs = anno.findAll('object')
+        for obj in objs:
+            obj_names = obj.findChildren('name')
+            for name_tag in obj_names:
+                tag_name = str(name_tag.contents[0])
+                if tag_name in cat_list:
+                    df.at[index, tag_name] += 1
+    return df
