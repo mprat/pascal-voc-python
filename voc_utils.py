@@ -81,7 +81,7 @@ def _load_data(category, data_type=None):
     if data_type is None:
         raise ValueError('Must provide data_type = train or val')
     to_find = category
-    filename = '/Users/mprat/personal/VOCdevkit/VOCdevkit/VOC2012/csvs/' + \
+    filename = os.path.join(root_dir, 'csvs/') + \
         data_type + '_' + \
         category + '.csv'
     if os.path.isfile(filename):
@@ -114,15 +114,6 @@ def get_image_url_list(category, data_type=None):
     image_url_list = list(
         unique_everseen(list(img_dir + df['fname'])))
     return image_url_list
-
-
-def get_feature_filename(
-        net_name, feature_name, cat_name, data_type, normalize=False):
-    if normalize:
-        fname = cat_name + "_" + net_name + "_" + feature_name + "_norm.msgpack"
-    else:
-        fname = cat_name + "_" + net_name + "_" + feature_name + ".msgpack"
-    return os.path.join('data', 'VOC2012', data_type, fname)
 
 
 def get_masks(cat_name, data_type, mask_type=None):
@@ -199,23 +190,6 @@ def display_image_and_mask(img, mask):
     plt.show(block=False)
 
 
-def get_predictor_name(cat_name=None, net_name=None, feature_name=None,
-                       predictor_type=None, neuron_size=None,
-                       max_degree=None, mask_type=None):
-    if mask_type is None:
-        raise ValueError('Must provide a mask type')
-    if max_degree is None:
-        return os.path.join(
-                'predictor', 'VOC2012', predictor_type, cat_name, mask_type,
-                '_'.join([net_name, feature_name, str(neuron_size),
-                          ]) + '.msgpack')
-    else:
-        return os.path.join(
-                'predictor', 'VOC2012', predictor_type, cat_name, mask_type,
-                '_'.join([net_name, feature_name, str(neuron_size),
-                          str(int(max_degree))]) + '.msgpack')
-
-
 def cat_name_to_cat_id(cat_name):
     cat_id_dict = {
         "aeroplane": 1,
@@ -240,38 +214,6 @@ def cat_name_to_cat_id(cat_name):
         "tvmonitor": 20
         }
     return cat_id_dict[cat_name]
-
-
-# methods for COCO result generation
-def get_coco_result_struct(fname, cat_name, bbox, score):
-    fname = os.path.basename(fname)
-    image_id = fname.replace('.jpg', '')
-    image_id = image_id.replace('_', '')
-    cat_id = cat_name_to_cat_id(cat_name)
-    result = {}
-    result['bbox'] = bbox
-    result['score'] = score
-    result['image_id'] = int(image_id)
-    result['category_id'] = cat_id
-    return result
-
-
-def get_coco_results_name(
-        cat_name, net_name, feature_name, predictor_type,
-        neuron_size,
-        max_degree=None):
-    #   single_no_thresh
-    if max_degree is None:
-        return os.path.join(
-            'results', 'VOC2012', predictor_type, cat_name,
-            '_'.join([net_name, feature_name,
-                      str(neuron_size)]) + '.json')
-    else:
-        return os.path.join(
-            'results', 'VOC2012', predictor_type, cat_name,
-            '_'.join([net_name, feature_name,
-                      str(neuron_size),
-                      str(int(max_degree))]) + '.json')
 
 
 def display_img_and_masks(
