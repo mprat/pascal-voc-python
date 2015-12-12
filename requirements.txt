@@ -1,0 +1,6 @@
+beautifulsoup4==4.3.2
+matplotlib>=1.4.3
+more_itertools>=2.2
+numpy>=1.10
+pandas>=0.16
+scikit-image>=0.11

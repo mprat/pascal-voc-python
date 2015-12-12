@@ -2,7 +2,6 @@ import pandas as pd
 import os
 from bs4 import BeautifulSoup
 from more_itertools import unique_everseen
-import utils
 import numpy as np
 import matplotlib.pyplot as plt
 import skimage
@@ -143,7 +142,17 @@ def get_masks(cat_name, data_type, mask_type=None):
         img_url = os.path.join(img_dir, entry['fname'])
         if img_url != prev_url:
             if blank_img is not None:
-                blank_img = utils.normalize_array(blank_img)
+                # TODO: options for how to process the masks
+                # make sure the mask is from 0 to 1
+                max_val = blank_img.max()
+                if max_val > 0:
+                    min_val = blank_img.min()
+                    # print "min val before normalizing: ", min_val
+                    # start at zero
+                    blank_img -= min_val
+                    # print "max val before normalizing: ", max_val
+                    # max val at 1
+                    blank_img /= max_val
                 masks.append(blank_img)
             prev_url = img_url
             img = load_img(img_url)
@@ -155,7 +164,17 @@ def get_masks(cat_name, data_type, mask_type=None):
             blank_img[bbox[1]:bbox[3], bbox[0]:bbox[2]] += 1.0
         else:
             raise ValueError('Not a valid mask type')
-    blank_img = utils.normalize_array(blank_img)
+    # TODO: options for how to process the masks
+    # make sure the mask is from 0 to 1
+    max_val = blank_img.max()
+    if max_val > 0:
+        min_val = blank_img.min()
+        # print "min val before normalizing: ", min_val
+        # start at zero
+        blank_img -= min_val
+        # print "max val before normalizing: ", max_val
+        # max val at 1
+        blank_img /= max_val
     masks.append(blank_img)
     return np.array(masks)
 
