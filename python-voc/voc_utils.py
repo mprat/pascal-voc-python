@@ -349,3 +349,26 @@ def display_img_and_masks(
     ax3.imshow(m_predicted_color)
     plt.draw()
     plt.show(block=block)
+
+
+def load_data_multilabel(data_type=None):
+    """
+    Returns a data frame for all images in a given set in multilabel format.
+
+    Args:
+        data_type (string, optional): "train" or "val"
+
+    Returns:
+        pandas DataFrame: filenames in multilabel format
+    """
+    if data_type is None:
+        raise ValueError('Must provide data_type = train or val')
+    filename = os.path.join(set_dir, data_type + ".txt")
+    df = pd.read_csv(
+        filename,
+        delim_whitespace=True,
+        header=None,
+        names=['filename'])
+    for img in df:
+        annotation = load_annotation(img['filename'])
+    

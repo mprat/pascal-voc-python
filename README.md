@@ -10,3 +10,14 @@ Repository for reading Pascal VOC data in Python, rather than requiring MATLAB t
 
 * load data by category
 * loading bounding boxes
+
+# To use
+
+## Install
+
+1. Clone the repo
+2. run `python setup.py install` or `python install develop` depending on what you will be doing
+
+## Uninstall
+
+Run `python setup.py develop --uninstall
