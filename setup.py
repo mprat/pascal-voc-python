@@ -1,6 +1,6 @@
 from setuptools import find_packages, setup
 
-setup(name="python-voc",
+setup(name="voc_utils",
       version="0.0",
       description="A python utility for loading data in Pascal VOC format",
       author="Michele Pratusevich",
