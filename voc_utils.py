@@ -14,6 +14,10 @@ set_dir = os.path.join(root_dir, 'ImageSets', 'Main')
 
 
 def list_image_sets():
+    """
+    List all the image sets from Pascal VOC. Don't bother computing
+    this on the fly, just remember it. It's faster.
+    """
     return [
         'aeroplane', 'bicycle', 'bird', 'boat',
         'bottle', 'bus', 'car', 'cat', 'chair',
@@ -23,9 +27,17 @@ def list_image_sets():
         'tvmonitor']
 
 
-# category name is from above, dataset is either "train" or
-# "val" or "train_val"
 def imgs_from_category(cat_name, dataset):
+    """
+    Summary
+
+    Args:
+        cat_name (string): Category name as a string (from list_image_sets())
+        dataset (string): "train", "val", "train_val", or "test" (if available)
+
+    Returns:
+        pandas dataframe: pandas DataFrame of all filenames from that category
+    """
     filename = os.path.join(set_dir, cat_name + "_" + dataset + ".txt")
     df = pd.read_csv(
         filename,
@@ -36,17 +48,48 @@ def imgs_from_category(cat_name, dataset):
 
 
 def imgs_from_category_as_list(cat_name, dataset):
+    """
+    Get a list of filenames for images in a particular category
+    as a list rather than a pandas dataframe.
+
+    Args:
+        cat_name (string): Category name as a string (from list_image_sets())
+        dataset (string): "train", "val", "train_val", or "test" (if available)
+
+    Returns:
+        list of srings: all filenames from that category
+    """
     df = imgs_from_category(cat_name, dataset)
     df = df[df['true'] == 1]
     return df['filename'].values
 
 
 def annotation_file_from_img(img_name):
+    """
+    Given an image name, get the annotation file for that image
+
+    Args:
+        img_name (string): string of the image name, relative to
+            the image directory.
+
+    Returns:
+        string: file path to the annotation file
+    """
     return os.path.join(ann_dir, img_name) + '.xml'
 
 
-# annotation operations
 def load_annotation(img_filename):
+    """
+    Load annotation file for a given image.
+
+    Args:
+        img_name (string): string of the image name, relative to
+            the image directory.
+
+    Returns:
+        BeautifulSoup structure: the annotation labels loaded as a
+            BeautifulSoup data structure
+    """
     xml = ""
     with open(annotation_file_from_img(img_filename)) as f:
         xml = f.readlines()
@@ -54,6 +97,7 @@ def load_annotation(img_filename):
     return BeautifulSoup(xml)
 
 
+# TODO: implement this
 def get_all_obj_and_box(objname, img_set):
     img_list = imgs_from_category_as_list(objname, img_set)
 
@@ -61,10 +105,17 @@ def get_all_obj_and_box(objname, img_set):
         annotation = load_annotation(img)
 
 
-# image operations
 def load_img(img_filename):
     """
-    Default is color
+    Load image from the filename. Default is to load in color if
+    possible.
+
+    Args:
+        img_name (string): string of the image name, relative to
+            the image directory.
+
+    Returns:
+        np array of float32: an image as a numpy array of float32
     """
     if os.path.isfile(img_filename):
         img = skimage.img_as_float(skimage.io.imread(
@@ -78,6 +129,19 @@ def load_img(img_filename):
 
 
 def _load_data(category, data_type=None):
+    """
+    Loads all the data as a pandas DataFrame for a particular category.
+
+    Args:
+        category (string): Category name as a string (from list_image_sets())
+        data_type (string, optional): "train" or "val"
+
+    Raises:
+        ValueError: when you don't give "train" or "val" as data_type
+
+    Returns:
+        pandas DataFrame: df of filenames and bounding boxes
+    """
     if data_type is None:
         raise ValueError('Must provide data_type = train or val')
     to_find = category
@@ -110,6 +174,16 @@ def _load_data(category, data_type=None):
 
 
 def get_image_url_list(category, data_type=None):
+    """
+    For a given data type, returns a list of filenames.
+
+    Args:
+        category (string): Category name as a string (from list_image_sets())
+        data_type (string, optional): "train" or "val"
+
+    Returns:
+        list of strings: list of all filenames for that particular category
+    """
     df = _load_data(category, data_type=data_type)
     image_url_list = list(
         unique_everseen(list(img_dir + df['fname'])))
@@ -117,6 +191,22 @@ def get_image_url_list(category, data_type=None):
 
 
 def get_masks(cat_name, data_type, mask_type=None):
+    """
+    Return a list of masks for a given category and data_type.
+
+    Args:
+        cat_name (string): Category name as a string (from list_image_sets())
+        data_type (string, optional): "train" or "val"
+        mask_type (string, optional): either "bbox1" or "bbox2" - whether to
+            sum or add the masks for multiple objects
+
+    Raises:
+        ValueError: if mask_type is not valid
+
+    Returns:
+        list of np arrays: list of np arrays that are masks for the images
+            in the particular category.
+    """
     # change this to searching through the df
     # for the bboxes instead of relying on the order
     # so far, should be OK since I'm always loading
@@ -170,7 +260,18 @@ def get_masks(cat_name, data_type, mask_type=None):
     return np.array(masks)
 
 
-def get_imgs(cat_name, data_type):
+def get_imgs(cat_name, data_type=None):
+    """
+    Load and return all the images for a particular category.
+
+    Args:
+        cat_name (string): Category name as a string (from list_image_sets())
+        data_type (string, optional): "train" or "val"
+
+    Returns:
+        np array of images: np array of loaded images for the category
+            and data_type.
+    """
     image_url_list = get_image_url_list(cat_name, data_type=data_type)
     imgs = []
     for url in image_url_list:
@@ -179,6 +280,13 @@ def get_imgs(cat_name, data_type):
 
 
 def display_image_and_mask(img, mask):
+    """
+    Display an image and it's mask side by side.
+
+    Args:
+        img (np array): the loaded image as a np array
+        mask (np array): the loaded mask as a np array
+    """
     plt.figure(1)
     plt.clf()
     ax1 = plt.subplot(1, 2, 1)
@@ -191,33 +299,32 @@ def display_image_and_mask(img, mask):
 
 
 def cat_name_to_cat_id(cat_name):
-    cat_id_dict = {
-        "aeroplane": 1,
-        "bicycle": 2,
-        "bird": 3,
-        "boat": 4,
-        "bottle": 5,
-        "bus": 6,
-        "car": 7,
-        "cat": 8,
-        "chair": 9,
-        "cow": 10,
-        "diningtable": 11,
-        "dog": 12,
-        "horse": 13,
-        "motorbike": 14,
-        "person": 15,
-        "pottedplant": 16,
-        "sheep": 17,
-        "sofa": 18,
-        "train": 19,
-        "tvmonitor": 20
-        }
+    """
+    Transform a category name to an id number alphabetically.
+
+    Args:
+        cat_name (string): Category name as a string (from list_image_sets())
+
+    Returns:
+        int: the integer that corresponds to the category name
+    """
+    cat_list = list_image_sets()
+    cat_id_dict = dict(zip(cat_list, range(len(cat_list))))
     return cat_id_dict[cat_name]
 
 
 def display_img_and_masks(
-        img, true_mask, predicted_mask, block):
+        img, true_mask, predicted_mask, block=False):
+    """
+    Display an image and it's two masks side by side.
+
+    Args:
+        img (np array): image as a np array
+        true_mask (np array): true mask as a np array
+        predicted_mask (np array): predicted_mask as a np array
+        block (bool, optional): whether to display in a blocking manner or not.
+            Default to False (non-blocking)
+    """
     m_predicted_color = predicted_mask.reshape(
         predicted_mask.shape[0], predicted_mask.shape[1])
     m_true_color = true_mask.reshape(
