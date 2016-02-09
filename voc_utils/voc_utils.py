@@ -5,6 +5,7 @@ from more_itertools import unique_everseen
 import numpy as np
 import matplotlib.pyplot as plt
 import skimage
+from skimage import io
 
 
 root_dir = '/Users/mprat/personal/VOCdevkit/VOCdevkit/VOC2012/'
@@ -117,15 +118,29 @@ def load_img(img_filename):
     Returns:
         np array of float32: an image as a numpy array of float32
     """
-    if os.path.isfile(img_filename):
-        img = skimage.img_as_float(skimage.io.imread(
-            img_filename)).astype(np.float32)
-        if img.ndim == 2:
-            img = img[:, :, np.newaxis]
-        elif img.shape[2] == 4:
-            img = img[:, :, :3]
-        return img
-    return load_img(os.path.join(img_dir, img_filename + '.jpg'))
+    img_filename = os.path.join(img_dir, img_filename + '.jpg')
+    img = skimage.img_as_float(io.imread(
+        img_filename)).astype(np.float32)
+    if img.ndim == 2:
+        img = img[:, :, np.newaxis]
+    elif img.shape[2] == 4:
+        img = img[:, :, :3]
+    return img
+
+
+def load_imgs(img_filenames):
+    """
+    Load a bunch of images from disk as np array.
+
+    Args:
+        img_filenames (list of strings): string of the image name, relative to
+            the image directory.
+
+    Returns:
+        np array of float32: a numpy array of images. each image is
+            a numpy array of float32
+    """
+    return np.array([load_img(fname) for fname in img_filenames])
 
 
 def _load_data(category, data_type=None):
@@ -383,5 +398,5 @@ def load_data_multilabel(data_type=None):
             for name_tag in obj_names:
                 tag_name = str(name_tag.contents[0])
                 if tag_name in cat_list:
-                    df.at[index, tag_name] += 1
+                    df.at[index, tag_name] = 1
     return df
